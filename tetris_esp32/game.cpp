@@ -1,5 +1,9 @@
 #include "game.h"
 
+// --- เพิ่มตัวแปรระดับโกลบอลด้านบน ---
+unsigned long gameStartTime = 0;
+unsigned long gameDurationSec = 0;
+
 // Tetrominoes
 const int8_t SHAPES[7][4][4] = {
   {{0,0,0,0},{1,1,1,1},{0,0,0,0},{0,0,0,0}}, // I
@@ -28,21 +32,25 @@ static void makeRandomPiece(Piece& p) {
   int t = random(7);
   memcpy(p.shape, SHAPES[t], sizeof(p.shape));
   p.size = SIZES[t];
-  p.x    = (COLS - 4) / 2;  
+  p.x    = (COLS - p.size) / 2;  // แก้จาก (COLS - 4) / 2
   p.y    = 0;
 }
 
-// Public
+// --- แก้ไขใน initGame() ---
 void initGame() {
   memset(board, 0, sizeof(board));
-  score    = 0;
-  lines    = 0;
-  level    = 1;
-  gameOver = false;
-  dropMs   = BASE_DROP_MS;
+  score         = 0;
+  lines         = 0;
+  level         = 1;
+  gameOver      = false;
+  dropMs        = BASE_DROP_MS;
   randomSeed(esp_random());
   makeRandomPiece(nxt);
   makeRandomPiece(cur);
+
+  // เริ่มจับเวลาใหม่เมื่อเริ่มเกม
+  gameStartTime = millis();
+  gameDurationSec = 0;
 }
 
 bool collides(const Piece& p, int ox, int oy, const int8_t shp[][4]) {
@@ -92,7 +100,7 @@ void lockAndSpawn() {
       memset(board[0], 0, sizeof(board[0]));
       cleared++; r++;
     }
-  }
+  } // สิ้นสุดลูปตรวจแถวตรงนี้ (เอาบล็อก spawn ในลูปเดิมออก)
 
   // score
   const int pts[] = {0, 100, 300, 500, 800};
@@ -101,10 +109,13 @@ void lockAndSpawn() {
   level   = lines / LEVEL_STEP + 1;
   dropMs  = max((long)MIN_DROP_MS, (long)BASE_DROP_MS - (level - 1) * 50L);
 
-  // spawn
+  // spawn (ให้ทำงานจุดนี้เพียงจุดเดียว)
   cur = nxt;
   makeRandomPiece(nxt);
-  if (collides(cur)) gameOver = true;
+  if (collides(cur)) {
+    gameOver = true;
+    gameDurationSec = (millis() - gameStartTime) / 1000;
+  }
 }
 
 void updateGame() {
