@@ -84,26 +84,32 @@ void drawSidebar(int8_t nextShape[][4], int nextSize, int score, int level) {
   display.print(level);
 }
 
-// Game over screen 
-void drawGameOver(int score) {
+void drawGameOver(int score, unsigned long seconds) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
 
-  // outer border
+  // Outer border
   display.drawRect(0, 0, 128, 64, SH110X_WHITE);
 
-  display.setCursor(22, 12);
-  display.print("GAME  OVER");
+  display.setCursor(34, 6);
+  display.print("GAME OVER");
 
-  display.drawLine(8, 22, 119, 22, SH110X_WHITE);
+  display.drawLine(8, 17, 119, 17, SH110X_WHITE);
 
-  display.setCursor(22, 30);
-  display.print("SCORE");
-  display.setCursor(22, 42);
+  // แสดงคะแนน
+  display.setCursor(16, 23);
+  display.print("SCORE: ");
   display.print(score);
 
-  display.setCursor(22, 54);
+  // แสดงเวลาที่เล่นไป (วินาที)
+  display.setCursor(16, 35);
+  display.print("TIME : ");
+  display.print(seconds);
+  display.print(" s");
+
+  // ข้อความรีสตาร์ท
+  display.setCursor(20, 50);
   display.print("RST to restart");
 
   display.display();
