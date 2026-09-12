@@ -32,8 +32,8 @@ void loop() {
   processInput();
   updateGame();
 
-  if (gameOver) {
-    drawGameOver(score);
+ if (gameOver) {
+    drawGameOver(score, gameDurationSec);
     return;
   }
 
