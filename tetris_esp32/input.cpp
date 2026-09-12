@@ -1,13 +1,27 @@
 #include "input.h"
 
-// Input state
+// บันทึกค่ากึ่งกลางของจอยสติ๊ก
+static int center_x = 2048;
+static int center_y = 2048;
+
 static unsigned long lastMoveX = 0;
 static unsigned long lastMoveY = 0;
 static bool          lastRotBtn = HIGH;
+
 void initInput() {
   pinMode(PIN_ROT, INPUT_PULLUP);
   pinMode(PIN_RESET, INPUT_PULLUP);  
-  analogReadResolution(12);  // ESP32: 0–4095
+  analogReadResolution(12);
+
+  // Calibrate หาค่ากึ่งกลางจริงตอนเริ่มระบบ
+  long sx = 0, sy = 0;
+  for (int i = 0; i < 10; i++) {
+    sx += analogRead(PIN_JOY_X);
+    sy += analogRead(PIN_JOY_Y);
+    delay(10);
+  }
+  center_x = sx / 10;
+  center_y = sy / 10;
 }
 
 void processInput() {
@@ -15,8 +29,9 @@ void processInput() {
 
   unsigned long now = millis();
 
-  int raw_x = analogRead(PIN_JOY_X) - 2048;
-  int raw_y = analogRead(PIN_JOY_Y) - 2048;
+  // ลบด้วยค่า center_x และ center_y ที่ Calibrate ได้
+  int raw_x = analogRead(PIN_JOY_X) - center_x;
+  int raw_y = analogRead(PIN_JOY_Y) - center_y;
 
   // หมุน 90 องศาขวา
   int cx = -raw_y;   
@@ -48,7 +63,6 @@ void processInput() {
 
   // Rotate
   bool btn = digitalRead(PIN_ROT);
-  Serial.println(btn);
   if (btn == LOW && lastRotBtn == HIGH) tryRotate();
   lastRotBtn = btn;
 }
